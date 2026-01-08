@@ -33,44 +33,6 @@
             mainContainer.style.borderRadius = '8px';
             mainContainer.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
 
-            // 创建折叠/展开按钮（右上角）
-            const toggleButton = document.createElement('button');
-            toggleButton.id = 'toggle-container-btn';
-            toggleButton.textContent = '折叠';
-            toggleButton.title = '折叠/展开所有输入框';
-            toggleButton.style.position = 'absolute';
-            toggleButton.style.top = '10px';
-            toggleButton.style.right = '10px';
-            toggleButton.style.zIndex = '100';
-            toggleButton.style.border = '1px solid #666';
-            toggleButton.style.backgroundColor = '#555';
-            toggleButton.style.color = '#fff';
-            toggleButton.style.padding = '4px 10px';
-            toggleButton.style.borderRadius = '4px';
-            toggleButton.style.cursor = 'pointer';
-            toggleButton.style.fontSize = '12px';
-
-            // 折叠状态变量
-            let isCollapsed = false;
-
-            // 折叠/展开功能
-            toggleButton.addEventListener('click', function() {
-                const contentContainer = document.getElementById('content-container');
-                if (contentContainer) {
-                    if (isCollapsed) {
-                        // 展开
-                        contentContainer.style.display = 'block';
-                        toggleButton.textContent = '折叠';
-                        isCollapsed = false;
-                    } else {
-                        // 折叠
-                        contentContainer.style.display = 'none';
-                        toggleButton.textContent = '展开';
-                        isCollapsed = true;
-                    }
-                }
-            });
-
             // 创建内容容器，用于包裹所有输入框和按钮
             const contentContainer = document.createElement('div');
             contentContainer.id = 'content-container';
@@ -127,6 +89,18 @@
             saveButton.style.borderRadius = '3px';
             saveButton.style.cursor = 'pointer';
 
+            // 创建文件名输入框
+            const fileNameInput = document.createElement('input');
+            fileNameInput.type = 'text';
+            fileNameInput.id = 'file-name-input';
+            fileNameInput.placeholder = '文件名（不含扩展名）';
+            fileNameInput.style.width = '180px';
+            fileNameInput.style.padding = '5px';
+            fileNameInput.style.backgroundColor = '#333';
+            fileNameInput.style.color = '#fff';
+            fileNameInput.style.border = '1px solid #555';
+            fileNameInput.style.borderRadius = '3px';
+
             // 创建"读取文本"按钮
             const loadButton = document.createElement('button');
             loadButton.textContent = '读取文本';
@@ -138,12 +112,70 @@
             loadButton.style.borderRadius = '3px';
             loadButton.style.cursor = 'pointer';
 
+            // 创建折叠/展开按钮
+            const toggleButton = document.createElement('button');
+            toggleButton.id = 'toggle-container-btn';
+            toggleButton.textContent = '折叠';
+            toggleButton.title = '折叠/展开所有输入框';
+            toggleButton.style.border = '1px solid #666';
+            toggleButton.style.backgroundColor = '#555';
+            toggleButton.style.color = '#fff';
+            toggleButton.style.padding = '4px 10px';
+            toggleButton.style.borderRadius = '4px';
+            toggleButton.style.cursor = 'pointer';
+            toggleButton.style.fontSize = '12px';
+
+            // 折叠状态变量
+            let isCollapsed = false;
+
+            // 折叠/展开功能
+            toggleButton.addEventListener('click', function() {
+                const contentContainer = document.getElementById('content-container');
+                if (contentContainer) {
+                    if (isCollapsed) {
+                        // 展开
+                        contentContainer.style.display = 'block';
+                        toggleButton.textContent = '折叠';
+                        isCollapsed = false;
+                        // 移除全屏点击展开功能
+                        mainContainer.style.cursor = 'default';
+                        mainContainer.removeEventListener('click', expandOnClick);
+                    } else {
+                        // 折叠
+                        contentContainer.style.display = 'none';
+                        toggleButton.textContent = '展开';
+                        isCollapsed = true;
+                        // 添加全屏点击展开功能
+                        mainContainer.style.cursor = 'pointer';
+                        mainContainer.addEventListener('click', expandOnClick);
+                    }
+                }
+            });
+
+            // 全屏点击展开功能
+            function expandOnClick(e) {
+                // 如果点击的是展开按钮本身，不处理（避免冲突）
+                if (e.target === toggleButton) return;
+
+                const contentContainer = document.getElementById('content-container');
+                if (contentContainer && isCollapsed) {
+                    contentContainer.style.display = 'block';
+                    toggleButton.textContent = '折叠';
+                    isCollapsed = false;
+                    // 移除全屏点击展开功能
+                    mainContainer.style.cursor = 'default';
+                    mainContainer.removeEventListener('click', expandOnClick);
+                }
+            }
+
             // 将按钮添加到按钮容器
             buttonContainer.appendChild(titleInput);
             buttonContainer.appendChild(addButton);
             buttonContainer.appendChild(mergeButton);
             buttonContainer.appendChild(saveButton);
+            buttonContainer.appendChild(fileNameInput);
             buttonContainer.appendChild(loadButton);
+            buttonContainer.appendChild(toggleButton);
 
             // 创建输入框容器，用于存放所有可拖拽输入框
             const inputsContainer = document.createElement('div');
@@ -154,8 +186,7 @@
             contentContainer.appendChild(buttonContainer);
             contentContainer.appendChild(inputsContainer);
 
-            // 将内容容器和折叠按钮添加到主容器
-            mainContainer.appendChild(toggleButton);
+            // 将内容容器添加到主容器
             mainContainer.appendChild(contentContainer);
 
             // 在目标输入框下方插入主容器
@@ -339,7 +370,7 @@
                 moveDownButton.addEventListener('click', function() {
                     const containers = Array.from(document.querySelectorAll('.resizable-input-container'));
                     const currentIndex = containers.indexOf(inputContainer);
-                    if (currentIndex < containers.length - 1) {
+                    if (currentIndex <containers.length - 1) {
                         const nextContainer = containers[currentIndex + 1];
                         inputContainer.parentNode.insertBefore(nextContainer, inputContainer);
                     }
@@ -357,6 +388,11 @@
                 newInput.className = 'new-input';
                 if(titleText == '合并'){
                     newInput.className = 'merged-input';
+                    // 设置为只读，不能手动编辑
+                    newInput.readOnly = true;
+                    newInput.style.backgroundColor = '#2a2a2a';
+                    newInput.style.cursor = 'default';
+                    newInput.title = '此输入框为只读，只能通过"合并文本"按钮更新内容';
                 }
                 newInput.placeholder = '输入提示词...';
                 newInput.style.display = 'block';
@@ -486,7 +522,8 @@
                     const titleElement = container.querySelector('span');
                     const inputElement = container.querySelector('.new-input');
 
-                    if (titleElement && inputElement) {
+                    // 跳过合并输入框（标题为"合并"的输入框）
+                    if (titleElement && inputElement && titleElement.textContent !== '合并') {
                         data.push({
                             title: titleElement.textContent,
                             content: inputElement.value
@@ -504,7 +541,11 @@
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `prompt_groups_${new Date().toISOString().slice(0, 10)}.json`;
+
+                // 使用自定义文件名或默认文件名
+                const fileName = fileNameInput.value.trim() || `prompt_groups_${new Date().toISOString().slice(0, 10)}`;
+                a.download = `${fileName}.json`;
+
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
@@ -533,9 +574,14 @@
                                 throw new Error('JSON格式不正确，应为数组格式');
                             }
 
-                            // 清空现有文本框
+                            // 清空现有文本框（除了合并输入框）
                             const containers = document.querySelectorAll('.resizable-input-container');
-                            containers.forEach(container => container.remove());
+                            containers.forEach(container => {
+                                const titleElement = container.querySelector('span');
+                                if (titleElement && titleElement.textContent !== '合并') {
+                                    container.remove();
+                                }
+                            });
 
                             // 创建新的文本框
                             data.forEach(item => {
@@ -546,7 +592,7 @@
                                 }
                             });
 
-                            alert(`已成功加载 ${data.length} 个文本框！`);
+                            // alert(`已成功加载 ${data.length} 个文本框！`);
                         } catch (error) {
                             alert('读取文件失败：' + error.message);
                         }
