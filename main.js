@@ -44,6 +44,10 @@
             buttonContainer.style.gap = '10px';
             buttonContainer.style.marginBottom = '15px';
             buttonContainer.style.alignItems = 'center';
+            buttonContainer.style.position = 'relative'; // 确保按钮容器有定位上下文
+            buttonContainer.style.zIndex = '10'; // 按钮容器在折叠区域之上
+            buttonContainer.style.width = 'fit-content';
+
 
             // 创建标题输入框（小输入框）
             const titleInput = document.createElement('input');
@@ -70,10 +74,10 @@
             // 创建"合并文本"按钮
             const mergeButton = document.createElement('button');
             mergeButton.id = 'merge-input-button';
-            mergeButton.textContent = '合并文本';
+            mergeButton.textContent = '合并并复制文本';
             mergeButton.style.border = '1px solid #ccc';
             mergeButton.style.padding = '5px 10px';
-            mergeButton.style.backgroundColor = '#555';
+            mergeButton.style.backgroundColor = '#f0ae33ff';
             mergeButton.style.color = '#fff';
             mergeButton.style.borderRadius = '3px';
             mergeButton.style.cursor = 'pointer';
@@ -109,73 +113,104 @@
             loadButton.style.padding = '5px 10px';
             loadButton.style.backgroundColor = '#2196F3';
             loadButton.style.color = '#fff';
-            loadButton.style.borderRadius = '3px';
             loadButton.style.cursor = 'pointer';
-
-            // 创建折叠/展开按钮
-            const toggleButton = document.createElement('button');
-            toggleButton.id = 'toggle-container-btn';
-            toggleButton.textContent = '折叠';
-            toggleButton.title = '折叠/展开所有输入框';
-            toggleButton.style.border = '1px solid #666';
-            toggleButton.style.backgroundColor = '#555';
-            toggleButton.style.color = '#fff';
-            toggleButton.style.padding = '4px 10px';
-            toggleButton.style.borderRadius = '4px';
-            toggleButton.style.cursor = 'pointer';
-            toggleButton.style.fontSize = '12px';
+            loadButton.style.borderRadius = '3px';
 
             // 折叠状态变量
             let isCollapsed = false;
 
+            // 创建顶部空白区域用于折叠/展开
+            const topArea = document.createElement('div');
+            topArea.id = 'top-collapse-area';
+            topArea.style.position = 'absolute';
+            topArea.style.top = '0';
+            topArea.style.left = '0';
+            topArea.style.right = '0';
+            topArea.style.height = '60px';
+            topArea.style.cursor = 'pointer';
+            topArea.style.zIndex = '1'; // 降低层级，在按钮之下
+            topArea.style.borderRadius = '8px 8px 0 0';
+            topArea.style.backgroundColor = 'transparent'; // 透明背景
+            topArea.title = '点击折叠/展开';
+
+            // 添加折叠/展开指示器
+            const collapseIndicator = document.createElement('div');
+            collapseIndicator.id = 'collapse-indicator';
+            collapseIndicator.style.position = 'absolute';
+            collapseIndicator.style.top = '8px';
+            collapseIndicator.style.right = '15px';
+            collapseIndicator.style.width = '20px';
+            collapseIndicator.style.height = '20px';
+            collapseIndicator.style.display = 'flex';
+            collapseIndicator.style.alignItems = 'center';
+            collapseIndicator.style.justifyContent = 'center';
+            collapseIndicator.style.color = '#888';
+            collapseIndicator.style.fontSize = '16px';
+            collapseIndicator.style.fontWeight = 'bold';
+            collapseIndicator.style.userSelect = 'none';
+            collapseIndicator.style.zIndex = '2'; // 指示器在顶部区域之上
+            collapseIndicator.textContent = '▼'; // 向下箭头表示可折叠
+
             // 折叠/展开功能
-            toggleButton.addEventListener('click', function() {
-                const contentContainer = document.getElementById('content-container');
+            function toggleCollapse() {
                 if (contentContainer) {
                     if (isCollapsed) {
                         // 展开
                         contentContainer.style.display = 'block';
-                        toggleButton.textContent = '折叠';
                         isCollapsed = false;
+                        collapseIndicator.textContent = '▼'; // 向下箭头
+                        collapseIndicator.title = '点击折叠';
                         // 移除全屏点击展开功能
                         mainContainer.style.cursor = 'default';
                         mainContainer.removeEventListener('click', expandOnClick);
                     } else {
                         // 折叠
                         contentContainer.style.display = 'none';
-                        toggleButton.textContent = '展开';
                         isCollapsed = true;
+                        collapseIndicator.textContent = '▲'; // 向上箭头
+                        collapseIndicator.title = '点击展开';
                         // 添加全屏点击展开功能
                         mainContainer.style.cursor = 'pointer';
                         mainContainer.addEventListener('click', expandOnClick);
                     }
                 }
-            });
+            }
 
             // 全屏点击展开功能
             function expandOnClick(e) {
-                // 如果点击的是展开按钮本身，不处理（避免冲突）
-                if (e.target === toggleButton) return;
+                // 如果点击的是顶部折叠区域本身，不处理（避免冲突）
+                if (e.target === topArea || e.target === collapseIndicator) return;
 
-                const contentContainer = document.getElementById('content-container');
                 if (contentContainer && isCollapsed) {
                     contentContainer.style.display = 'block';
-                    toggleButton.textContent = '折叠';
                     isCollapsed = false;
+                    collapseIndicator.textContent = '▼';
+                    collapseIndicator.title = '点击折叠';
                     // 移除全屏点击展开功能
                     mainContainer.style.cursor = 'default';
                     mainContainer.removeEventListener('click', expandOnClick);
                 }
             }
 
+            // 顶部区域点击事件
+            topArea.addEventListener('click', function(e) {
+                e.stopPropagation(); // 阻止事件冒泡
+                toggleCollapse();
+            });
+
+            // 将折叠指示器添加到顶部区域
+            topArea.appendChild(collapseIndicator);
+
+            // 将顶部区域添加到主容器
+            mainContainer.appendChild(topArea);
+
             // 将按钮添加到按钮容器
             buttonContainer.appendChild(titleInput);
             buttonContainer.appendChild(addButton);
             buttonContainer.appendChild(mergeButton);
-            buttonContainer.appendChild(saveButton);
             buttonContainer.appendChild(fileNameInput);
+            buttonContainer.appendChild(saveButton);
             buttonContainer.appendChild(loadButton);
-            buttonContainer.appendChild(toggleButton);
 
             // 创建输入框容器，用于存放所有可拖拽输入框
             const inputsContainer = document.createElement('div');
@@ -370,7 +405,7 @@
                 moveDownButton.addEventListener('click', function() {
                     const containers = Array.from(document.querySelectorAll('.resizable-input-container'));
                     const currentIndex = containers.indexOf(inputContainer);
-                    if (currentIndex <containers.length - 1) {
+                    if (currentIndex < containers.length - 1) {
                         const nextContainer = containers[currentIndex + 1];
                         inputContainer.parentNode.insertBefore(nextContainer, inputContainer);
                     }
@@ -386,22 +421,23 @@
                 // 创建文本输入框
                 const newInput = document.createElement('textarea');
                 newInput.className = 'new-input';
+                newInput.placeholder = '输入提示词...';
+                newInput.style.backgroundColor = '#333';
+                newInput.style.color = '#fff';
                 if(titleText == '合并'){
                     newInput.className = 'merged-input';
                     // 设置为只读，不能手动编辑
                     newInput.readOnly = true;
+                    newInput.style.color = '#8b8b8bff';
                     newInput.style.backgroundColor = '#2a2a2a';
                     newInput.style.cursor = 'default';
-                    newInput.title = '此输入框为只读，只能通过"合并文本"按钮更新内容';
+                    newInput.placeholder = '此输入框为只读，只能通过"合并文本"按钮更新内容';
                 }
-                newInput.placeholder = '输入提示词...';
                 newInput.style.display = 'block';
                 newInput.style.width = '100%';
                 newInput.style.height = '80px';
                 newInput.style.minHeight = '50px';
                 newInput.style.minWidth = '200px';
-                newInput.style.backgroundColor = '#333';
-                newInput.style.color = '#fff';
                 newInput.style.border = '1px solid #555';
                 newInput.style.padding = '8px';
                 newInput.style.resize = 'none';
@@ -509,9 +545,87 @@
                 if (texts.length > 0) {
                     const mergedText = texts.join('\n');
                     mergedInput.value = mergedText;
+                    copyToClipboard(mergedText);
                     mergedInput.dispatchEvent(new Event('input'));
+
+                    // 将合并后的文本赋值给SD WebUI的原生提示词输入框
+                    // 尝试多种选择器以确保能找到正确的输入框
+                    const selectors = [
+                        '#txt2img_prompt > label > textarea',
+                        '#txt2img_prompt textarea',
+                        '#txt2img_prompt_row textarea',
+                        '#txt2img_prompt textarea[data-testid="textbox"]',
+                        '#txt2img_prompt textarea[placeholder*="Prompt"]',
+                        '#txt2img_prompt textarea[placeholder*="提示"]',
+                        '#txt2img_prompt .prompt textarea',
+                        '#txt2img_prompt .prompt-row textarea'
+                    ];
+
+                    let targetTextarea = null;
+                    for (const selector of selectors) {
+                        targetTextarea = document.querySelector(selector);
+                        if (targetTextarea) {
+                            console.log(`找到提示词输入框: ${selector}`);
+                            break;
+                        }
+                    }
+
+                    if (targetTextarea) {
+                        targetTextarea.value = mergedText;
+                        // 触发输入事件以确保UI更新
+                        targetTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+                        targetTextarea.dispatchEvent(new Event('change', { bubbles: true }));
+                        console.log('已成功将合并文本设置到SD WebUI提示词输入框');
+                    } else {
+                        console.warn('未找到SD WebUI提示词输入框，尝试的选择器:', selectors);
+                        // 可以添加一个提示，但不要用alert干扰用户体验
+                    }
                 }
             });
+
+            // 复制文本到剪贴板的函数
+            function copyToClipboard(text) {
+                // 方法1: 使用现代 Clipboard API
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(text)
+                        .then(() => {
+                            // alert('文本已复制到剪贴板！');
+                        })
+                        .catch(err => {
+                            console.error('复制失败:', err);
+                            fallbackCopy(text);
+                        });
+                } else {
+                    // 方法2: 使用传统方法作为备选
+                    fallbackCopy(text);
+                }
+            }
+
+            // 传统复制方法
+            function fallbackCopy(text) {
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+
+                try {
+                    const successful = document.execCommand('copy');
+                    if (successful) {
+                        // alert('文本已复制到剪贴板！');
+                    } else {
+                        alert('复制失败，请手动复制');
+                    }
+                } catch (err) {
+                    console.error('复制失败:', err);
+                    alert('复制失败，请手动复制');
+                } finally {
+                    document.body.removeChild(textArea);
+                }
+            }
 
             // "保存文本"按钮点击事件：保存所有文本框内容为JSON文件
             saveButton.addEventListener('click', function() {
@@ -554,6 +668,96 @@
                 // alert(`已保存 ${data.length} 个文本框内容到JSON文件！`);
             });
 
+            // 在创建主容器后，添加拖拽功能
+            // 在 mainContainer 创建后，添加以下代码：
+
+            // 添加拖拽功能
+            mainContainer.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                mainContainer.style.border = '2px dashed #4CAF50';
+                mainContainer.style.backgroundColor = '#2d2d2d';
+            });
+
+            mainContainer.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                mainContainer.style.border = '1px solid #444';
+                mainContainer.style.backgroundColor = '#2a2a2a';
+            });
+
+            mainContainer.addEventListener('drop', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                // 恢复容器样式
+                mainContainer.style.border = '1px solid #444';
+                mainContainer.style.backgroundColor = '#2a2a2a';
+
+                // 获取拖拽的文件
+                const files = e.dataTransfer.files;
+                if (files.length === 0) return;
+
+                const file = files[0];
+                const fileName = file.name;
+
+                // 检查文件类型
+                if (!fileName.toLowerCase().endsWith('.json')) {
+                    alert('请拖拽JSON文件！');
+                    return;
+                }
+
+                // 使用现有的读取文件逻辑
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    try {
+                        const data = JSON.parse(event.target.result);
+
+                        if (!Array.isArray(data)) {
+                            throw new Error('JSON格式不正确，应为数组格式');
+                        }
+
+                        // 清空现有文本框（除了合并输入框）
+                        const containers = document.querySelectorAll('.resizable-input-container');
+                        containers.forEach(container => {
+                            const titleElement = container.querySelector('span');
+                            if (titleElement && titleElement.textContent !== '合并') {
+                                container.remove();
+                            }
+                        });
+
+                        // 创建新的文本框
+                        data.forEach(item => {
+                            if (item.title && item.content !== undefined) {
+                                const resizableInput = createResizableInput(item.title);
+                                resizableInput.input.value = item.content;
+                                inputsContainer.appendChild(resizableInput.container);
+                            }
+                        });
+
+                        fileNameInput.value = fileName.replace('.json', '');
+                        // alert(`已成功加载 ${data.length} 个文本框！`);
+                    } catch (error) {
+                        alert('读取文件失败：' + error.message);
+                    }
+                };
+
+                reader.readAsText(file);
+            });
+
+            // // 添加拖拽提示文本
+            // const dragHint = document.createElement('div');
+            // dragHint.textContent = '拖拽JSON文件到此处可快速加载';
+            // dragHint.style.fontSize = '12px';
+            // dragHint.style.color = '#888';
+            // dragHint.style.marginTop = '5px';
+            // dragHint.style.textAlign = 'center';
+            // dragHint.style.padding = '5px';
+            // dragHint.style.borderTop = '1px solid #444';
+
+            // // 将拖拽提示添加到主容器
+            // mainContainer.appendChild(dragHint);
+
             // "读取文本"按钮点击事件：从JSON文件读取并还原文本框
             loadButton.addEventListener('click', function() {
                 const fileInput = document.createElement('input');
@@ -563,6 +767,7 @@
 
                 fileInput.addEventListener('change', function(e) {
                     const file = e.target.files[0];
+                    const fileName = file.name;
                     if (!file) return;
 
                     const reader = new FileReader();
@@ -592,6 +797,7 @@
                                 }
                             });
 
+                            fileNameInput.value = fileName.replace('.json', '');
                             // alert(`已成功加载 ${data.length} 个文本框！`);
                         } catch (error) {
                             alert('读取文件失败：' + error.message);
