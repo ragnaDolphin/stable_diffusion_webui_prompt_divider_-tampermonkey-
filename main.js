@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         stable diffusion webui提示词分组器
 // @namespace    http://tampermonkey.net/
-// @version      1.11
+// @version      2026-1-10.1
 // @description  用来在sdwebui上附加N个提示词输入框，方便分别输入提示词（如风景、人物、衣服）同时可以将提示词保存为json文件，方便读取
 // @author       ragnaDolphin
 // @match        *://127.0.0.1:7860/*
