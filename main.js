@@ -7,6 +7,7 @@
 // @match        *://127.0.0.1:7860/*
 // @match        *://localhost:7860/*
 // @grant        none
+// @license      MIT License
 // ==/UserScript==
 
 (function() {
