@@ -74,7 +74,7 @@
             // 创建"合并文本"按钮
             const mergeButton = document.createElement('button');
             mergeButton.id = 'merge-input-button';
-            mergeButton.textContent = '合并并复制文本';
+            mergeButton.textContent = '合并文本';
             mergeButton.style.border = '1px solid #ccc';
             mergeButton.style.padding = '5px 10px';
             mergeButton.style.backgroundColor = '#f0ae33ff';
@@ -545,7 +545,7 @@
                 if (texts.length > 0) {
                     const mergedText = texts.join('\n');
                     mergedInput.value = mergedText;
-                    copyToClipboard(mergedText);
+                    // copyToClipboard(mergedText);
                     mergedInput.dispatchEvent(new Event('input'));
 
                     // 将合并后的文本赋值给SD WebUI的原生提示词输入框
