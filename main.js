@@ -756,8 +756,7 @@
                 reader.readAsText(file);
             });
 
-            function loadFile(event) {
-                const fileName = event.target.files[0].name;
+            function loadFile(event,fileName) {
                 try {
                     const data = JSON.parse(event.target.result);
 
@@ -813,10 +812,12 @@
 
                 fileInput.addEventListener('change', function(e) {
                     const file = e.target.files[0];
+                    const fileName = file.name;
                     if (!file) return;
-
                     const reader = new FileReader();
-                    reader.onload = loadFile;
+                    reader.onload = function(event) {
+                        loadFile(event, fileName);
+                    };
 
                     reader.readAsText(file);
                 });
